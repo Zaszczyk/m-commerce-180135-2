@@ -20,6 +20,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONException;
 
@@ -121,11 +122,18 @@ public class MainActivity extends ListActivity {
                             else{
                                 try {
                                     String data = restoreCache(location);
-                                    WeatherParser weatherParser = new WeatherParser(data);
-                                    Weather weather = weatherParser.parseWeather();
-                                    OpenWeatherClient openWeatherClient = new OpenWeatherClient();
-                                    weather.iconData = openWeatherClient.getImage(weather.icon);
-                                    displayWeather(weather);
+                                    Log.e("CACHE", data);
+                                    if(data == ""){
+                                        hideWeather();
+                                        Toast.makeText(getApplicationContext(), "Brak połączenia internetowego oraz cache.", Toast.LENGTH_SHORT).show();
+                                    }
+                                    else{
+                                        WeatherParser weatherParser = new WeatherParser(data);
+                                        Weather weather = weatherParser.parseWeather();
+                                        OpenWeatherClient openWeatherClient = new OpenWeatherClient();
+                                        weather.iconData = openWeatherClient.getImage(weather.icon);
+                                        displayWeather(weather);
+                                    }
                                 } catch (JSONException e) {
                                     e.printStackTrace();
                                 }
@@ -187,11 +195,20 @@ public class MainActivity extends ListActivity {
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 
+    private void hideWeather(){
+        temp.setVisibility(View.INVISIBLE);
+        hum.setVisibility(View.INVISIBLE);
+        imgView.setVisibility(View.INVISIBLE);
+    }
+
     private void displayWeather(Weather weather){
         if (weather.iconData != null && weather.iconData.length > 0) {
             Bitmap img = BitmapFactory.decodeByteArray(weather.iconData, 0, weather.iconData.length);
             imgView.setImageBitmap(img);
         }
+        temp.setVisibility(View.VISIBLE);
+        temp.setVisibility(View.VISIBLE);
+        imgView.setVisibility(View.VISIBLE);
 
         cityText.setText(weather.city + "," + weather.country);
         temp.setText("" + Math.round((weather.temperature - 273.15)) + " C");
